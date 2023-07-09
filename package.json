@@ -7,7 +7,7 @@
   "types": "./typescript/types/whisper.d.ts",
   "scripts": {
     "build": "cmake-js compile -T whisper-ts -B Release",
-    "postinstall": "pnpm build",
+    "postinstall": "pnpm build && ./models/download-ggml-model.sh base.en",
     "test": "jest"
   },
   "devDependencies": {

@@ -46,3 +46,4 @@ bindings/java/.idea/
 .idea/
 
 node_modules
+typescript-demo/*.wav

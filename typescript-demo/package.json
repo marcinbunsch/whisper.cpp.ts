@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ts-node test.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@types/node": "^20.4.1",
+    "@types/node-wav": "^0.0.0",
+    "node-wav": "^0.0.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6",
     "whisper-ts": "link:.."

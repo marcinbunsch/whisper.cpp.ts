@@ -5,18 +5,28 @@ const path = require("path");
 
 const whisperAsync = promisify(whisper);
 
+const modelsFolder = path.join(__dirname, "../../models");
+
 const whisperParams = {
   language: "en",
-  model: path.join(__dirname, "../../models/ggml-base.en.bin"),
-  fname_inp: path.join(__dirname, "../../samples/jfk.wav"),
+  model: "ggml-base.en.bin",
 };
 
-async function transcribe() {
-  const start = Date.now();
-  const value = await whisperAsync(whisperParams);
-  const elapsed = Date.now() - start;
-  console.log(`transcribe() took ${elapsed}ms`);
-  return value;
+async function transcribe(options = whisperParams) {
+  const params = { ...whisperParams, ...options };
+  params.model = path.join(modelsFolder, params.model);
+  params.audioData = options.audioData;
+
+  const results = await whisperAsync(params);
+  const output = [];
+  for (const result of results) {
+    output.push({
+      from: parseInt(result[0]),
+      to: parseInt(result[1]),
+      text: result[2].trim(),
+    });
+  }
+  return output;
 }
 
 module.exports = { transcribe };

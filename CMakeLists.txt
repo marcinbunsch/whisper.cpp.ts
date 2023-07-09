@@ -415,3 +415,5 @@ endif ()
 if (WHISPER_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
+add_subdirectory(typescript)

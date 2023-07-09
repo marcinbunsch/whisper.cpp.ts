@@ -44,3 +44,5 @@ models/*.mlpackage
 bindings/java/.gradle/
 bindings/java/.idea/
 .idea/
+
+node_modules

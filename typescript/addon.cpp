@@ -19,12 +19,12 @@ struct whisper_params
   int32_t duration_ms = 0;
   int32_t max_context = -1;
   int32_t max_len = 0;
-  int32_t best_of = 5;
+  int32_t best_of = 2;
   int32_t beam_size = -1;
 
   float word_thold = 0.01f;
-  float entropy_thold = 2.4f;
-  float logprob_thold = -1.0f;
+  float entropy_thold = 2.40f;
+  float logprob_thold = -1.00f;
 
   bool speed_up = false;
   bool translate = false;
@@ -147,7 +147,13 @@ int run(whisper_params &params, std::vector<std::vector<std::string>> &result)
     result[i].emplace_back(text);
   }
 
-  // whisper_print_timings(ctx);
+  // only print timings if DEBUG env var is set
+
+  if (getenv("DEBUG") != nullptr)
+  {
+    whisper_print_timings(ctx);
+  }
+
   whisper_free(ctx);
 
   return 0;

@@ -23,6 +23,12 @@ string(REPLACE "\"" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
 target_include_directories(${TARGET} PRIVATE ${NODE_ADDON_API_DIR})
 #==================================================================
 
+# Ensure FP16_VA is accessible on linux
+if(UNIX AND NOT APPLE)
+    target_compile_options(common PRIVATE -mcpu=native)
+    target_compile_options(whisper PRIVATE -mcpu=native)
+endif()
+
 target_link_libraries(${TARGET} ${CMAKE_JS_LIB} common whisper ${CMAKE_THREAD_LIBS_INIT})
 
 if(MSVC AND CMAKE_JS_NODELIB_DEF AND CMAKE_JS_NODELIB_TARGET)

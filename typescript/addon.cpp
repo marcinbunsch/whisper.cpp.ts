@@ -96,6 +96,13 @@ int run(whisper_params &params, std::vector<std::vector<std::string>> &result)
 
   std::vector<float> pcmf32 = params.audioData; // mono-channel F32 PCM
 
+  // print system information
+  if (getenv("DEBUG") != nullptr) {
+      fprintf(stderr, "\n");
+      fprintf(stderr, "system_info: n_threads = %d / %d | %s\n",
+              params.n_threads*params.n_processors, std::thread::hardware_concurrency(), whisper_print_system_info());
+  }
+
   // run the inference
   {
     whisper_full_params wparams = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);

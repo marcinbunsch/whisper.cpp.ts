@@ -11,4 +11,10 @@ declare module "whisper-ts" {
   };
 
   function transcribe(options?: TranscribeOptions): Promise<TranscribeResult[]>;
+
+  class Whisper {
+    constructor(modelPath: string);
+    transcribe(options?: TranscribeOptions): Promise<TranscribeResult[]>;
+    dispose(): void;
+  }
 }

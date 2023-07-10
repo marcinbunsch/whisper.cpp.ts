@@ -1,4 +1,4 @@
-import { transcribe } from "whisper-ts";
+import { Whisper } from "whisper-ts";
 import nodeWav from "node-wav";
 import fs from "fs";
 
@@ -14,17 +14,36 @@ function loadAudio(audioPath: string) {
   return { audioData, sampleRate: result.sampleRate };
 }
 
-async function run() {
-  const filename = "sample2.wav";
-  const { audioData } = loadAudio(filename);
-
-  const start = Date.now();
-  const two = await transcribe({
+function runSample(whisper: Whisper, audioData: Float32Array) {
+  return whisper.transcribe({
     audioData,
   });
-  console.log(two);
-  const elapsed = Date.now() - start;
-  console.log(`transcribe() took ${elapsed}ms`);
+}
+
+async function run() {
+  const filename = "jfk.wav";
+  const { audioData } = loadAudio(filename);
+
+  const whisper = new Whisper("ggml-base.en.bin");
+  try {
+    // do something
+    for (let i = 0; i < 10; i++) {
+      const start = Date.now();
+      const res = await runSample(whisper, audioData);
+      const elapsed = Date.now() - start;
+      console.log(elapsed, res);
+    }
+  } finally {
+    whisper.dispose();
+  }
+
+  // const start = Date.now();
+  // const two = await transcribe({
+  //   audioData,
+  // });
+  // console.log(two);
+  // const elapsed = Date.now() - start;
+  // console.log(`transcribe() took ${elapsed}ms`);
 }
 
 run();

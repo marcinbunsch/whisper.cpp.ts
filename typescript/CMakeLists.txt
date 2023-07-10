@@ -3,7 +3,7 @@ set(TARGET whisper-ts)
 # Base settings
 #==================================================================
 # env var supported by cmake-js
-add_definitions(-DNAPI_VERSION=4)
+add_definitions(-DNAPI_VERSION=7)
 include_directories(${CMAKE_JS_INC})
 #==================================================================
 

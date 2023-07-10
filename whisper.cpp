@@ -2713,6 +2713,7 @@ struct whisper_state * whisper_init_state(whisper_context * ctx) {
         return nullptr;
     }
 
+
     if (DEBUG_MODE) {
         const size_t memory_size = ggml_nbytes(state->kv_cross.k) + ggml_nbytes(state->kv_cross.v);
         fprintf(stderr, "%s: kv cross size = %7.2f MB\n", __func__, memory_size / 1024.0 / 1024.0);

@@ -526,6 +526,12 @@ Napi::Value WhisperWorker::dispose(const Napi::CallbackInfo& info){
 }
 
 Napi::Value WhisperWorker::transcribe(const Napi::CallbackInfo& info){
+  if (ctx == nullptr) {
+    Napi::TypeError::New(info.Env(), "whisper context not initialized").ThrowAsJavaScriptException();
+  }
+
+  whisper_reset_state(ctx);
+
   Napi::Env env = info.Env();
   if (info.Length() <= 0 || !info[0].IsObject())
   {

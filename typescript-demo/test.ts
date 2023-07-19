@@ -24,7 +24,7 @@ async function run() {
   const filename = "jfk.wav";
   const { audioData } = loadAudio(filename);
 
-  const whisper = new Whisper("ggml-base.en.bin");
+  const whisper = new Whisper("ggml-tiny.en.bin");
   try {
     // do something
     for (let i = 0; i < 10; i++) {

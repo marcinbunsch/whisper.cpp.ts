@@ -23,7 +23,7 @@ function Whisper(model) {
     params.model = path.join(modelsFolder, params.model);
     params.audioData = options.audioData;
 
-    const results = await whisperAsync(params);
+    const results = await instanceTranscribeAsync(params);
     const output = [];
     for (const result of results) {
       output.push({

@@ -2974,6 +2974,13 @@ void whisper_free_state(struct whisper_state * state)
     }
 }
 
+void whisper_reset_state(struct whisper_context * ctx) {
+    if (ctx) {
+        whisper_free_state(ctx->state);
+        ctx->state = whisper_init_state(ctx);
+    }
+}
+
 void whisper_free(struct whisper_context * ctx) {
     if (ctx) {
         if (ctx->model.ctx) {

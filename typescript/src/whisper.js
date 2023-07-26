@@ -75,7 +75,7 @@ async function transcribeWithConfidence(options = whisperParams) {
     const token = result[0].trim();
     // these are some special tokens that we don't want to return
     if (token === "[_BEG_]") continue;
-    if (token === "[_TT_550]") continue;
+    if (token.match(/\[_TT_/)) continue;
     const confidence = parseFloat(result[1]);
     output.push({
       token,

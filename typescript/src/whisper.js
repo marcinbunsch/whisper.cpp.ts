@@ -4,6 +4,7 @@ const { promisify } = require("util");
 const path = require("path");
 
 const whisperAsync = promisify(whisperTs.whisper);
+const whisperWithConfidenceAsync = promisify(whisperTs.whisperWithConfidence);
 
 const modelsFolder = path.join(__dirname, "../../models");
 
@@ -62,4 +63,26 @@ async function transcribe(options = whisperParams) {
   return output;
 }
 
-module.exports = { transcribe, Whisper };
+async function transcribeWithConfidence(options = whisperParams) {
+  const params = { ...whisperParams, ...options };
+  params.model = path.join(modelsFolder, params.model);
+  params.audioData = options.audioData;
+
+  const results = await whisperWithConfidenceAsync(params);
+  console.log(results);
+  const output = [];
+  for (const result of results) {
+    const token = result[0].trim();
+    // these are some special tokens that we don't want to return
+    if (token === "[_BEG_]") continue;
+    if (token === "[_TT_550]") continue;
+    const confidence = parseFloat(result[1]);
+    output.push({
+      token,
+      confidence,
+    });
+  }
+  return output;
+}
+
+module.exports = { transcribe, transcribeWithConfidence, Whisper };

@@ -167,6 +167,115 @@ int run(whisper_params &params, std::vector<std::vector<std::string>> &result)
   return 0;
 }
 
+int run_with_confidence(whisper_params &params, std::vector<std::vector<std::string>> &result)
+{
+  if (params.language != "auto" && whisper_lang_id(params.language.c_str()) == -1)
+  {
+    fprintf(stderr, "error: unknown language '%s'\n", params.language.c_str());
+    exit(0);
+  }
+
+  // whisper init
+
+  struct whisper_context *ctx = whisper_init_from_file(params.model.c_str());
+
+  if (ctx == nullptr)
+  {
+    fprintf(stderr, "error: failed to initialize whisper context\n");
+    return 3;
+  }
+
+  std::vector<float> pcmf32 = params.audioData; // mono-channel F32 PCM
+
+  // print system information
+  if (DEBUG_MODE) {
+      fprintf(stderr, "\n");
+      fprintf(stderr, "system_info: n_threads = %d / %d | %s\n",
+              params.n_threads*params.n_processors, std::thread::hardware_concurrency(), whisper_print_system_info());
+  }
+
+  // run the inference
+  {
+    whisper_full_params wparams = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
+
+    wparams.strategy = params.beam_size > 1 ? WHISPER_SAMPLING_BEAM_SEARCH : WHISPER_SAMPLING_GREEDY;
+
+    wparams.print_realtime = false;
+    wparams.print_progress = params.print_progress;
+    wparams.print_timestamps = !params.no_timestamps;
+    wparams.print_special = params.print_special;
+    wparams.translate = params.translate;
+    wparams.language = params.language.c_str();
+    wparams.n_threads = params.n_threads;
+    wparams.n_max_text_ctx = params.max_context >= 0 ? params.max_context : wparams.n_max_text_ctx;
+    wparams.offset_ms = params.offset_t_ms;
+    wparams.duration_ms = params.duration_ms;
+
+    wparams.token_timestamps = params.output_wts || params.max_len > 0;
+    wparams.thold_pt = params.word_thold;
+    wparams.entropy_thold = params.entropy_thold;
+    wparams.logprob_thold = params.logprob_thold;
+    wparams.max_len = params.output_wts && params.max_len == 0 ? 60 : params.max_len;
+
+    wparams.speed_up = params.speed_up;
+
+    wparams.greedy.best_of = params.best_of;
+    wparams.beam_search.beam_size = params.beam_size;
+
+    wparams.initial_prompt = params.prompt.c_str();
+
+    if (whisper_full_parallel(ctx, wparams, pcmf32.data(), pcmf32.size(), params.n_processors) != 0)
+    {
+      fprintf(stderr, "failed to process audio\n");
+      return 10;
+    }
+  }
+  // }
+  const int n_segments = whisper_full_n_segments(ctx);
+
+  printf("n_segments: %d\n", n_segments);
+
+  for (int i = 0; i < n_segments; i++) {
+    int token_count = whisper_full_n_tokens(ctx, i);
+    printf("token_count: %d\n", token_count);
+    result.resize(result.size() + token_count);
+    for (int j = 0; j < token_count; ++j) {
+      const char * text = whisper_full_get_token_text(ctx, i, j);
+      const float  p    = whisper_full_get_token_p   (ctx, i, j);
+
+      printf("text: %s - confidence %f\n", text, p);
+
+      // this needs to be a 3 element array
+      result[j].emplace_back(text);
+      result[j].emplace_back(std::to_string(p));
+      result[j].emplace_back("");
+    }
+  }
+
+  // const int n_segments = whisper_full_n_segments(ctx);
+  // result.resize(n_segments);
+  // for (int i = 0; i < n_segments; ++i)
+  // {
+  //   const char *text = whisper_full_get_segment_text(ctx, i);
+  //   const int64_t t0 = whisper_full_get_segment_t0(ctx, i);
+  //   const int64_t t1 = whisper_full_get_segment_t1(ctx, i);
+
+  //   result[i].emplace_back(std::to_string(t0));
+  //   result[i].emplace_back(std::to_string(t1));
+  //   result[i].emplace_back(text);
+  // }
+
+  // only print timings if DEBUG env var is set
+
+  if (DEBUG_MODE) {
+    whisper_print_timings(ctx);
+  }
+
+  whisper_free(ctx);
+
+  return 0;
+};
+
 int run_with_context(whisper_context *ctx, whisper_params &params, std::vector<std::vector<std::string>> &result)
 {
   if (params.language != "auto" && whisper_lang_id(params.language.c_str()) == -1)
@@ -281,6 +390,37 @@ public:
   void Execute() override
   {
     run(params, result);
+  }
+
+  void OnOK() override
+  {
+    Napi::HandleScope scope(Env());
+    Napi::Object res = Napi::Array::New(Env(), result.size());
+    for (uint64_t i = 0; i < result.size(); ++i)
+    {
+      Napi::Object tmp = Napi::Array::New(Env(), 3);
+      for (uint64_t j = 0; j < 3; ++j)
+      {
+        tmp[j] = Napi::String::New(Env(), result[i][j]);
+      }
+      res[i] = tmp;
+    }
+    Callback().Call({Env().Null(), res});
+  }
+
+private:
+  whisper_params params;
+  std::vector<std::vector<std::string>> result;
+};
+
+class ConfidenceWorker : public Napi::AsyncWorker {
+public:
+  ConfidenceWorker(Napi::Function &callback, whisper_params params)
+      : Napi::AsyncWorker(callback), params(params) {}
+
+  void Execute() override
+  {
+    run_with_confidence(params, result);
   }
 
   void OnOK() override
@@ -459,6 +599,41 @@ Napi::Value whisper(const Napi::CallbackInfo &info)
   return env.Undefined();
 }
 
+Napi::Value whisperWithConfidence(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  if (info.Length() <= 0 || !info[0].IsObject())
+  {
+    Napi::TypeError::New(env, "object expected").ThrowAsJavaScriptException();
+  }
+  whisper_params params;
+
+  Napi::Object whisper_params = info[0].As<Napi::Object>();
+  std::string language = whisper_params.Get("language").As<Napi::String>();
+  std::string model = whisper_params.Get("model").As<Napi::String>();
+
+  std::vector<float> audioData;
+
+  if (whisper_params.Has("audioData"))
+  {
+    Napi::Float32Array audioDataArray = whisper_params.Get("audioData").As<Napi::Float32Array>();
+    audioData.resize(audioDataArray.ElementLength());
+    for (size_t i = 0; i < audioData.size(); i++)
+    {
+      audioData[i] = audioDataArray[i];
+    }
+  }
+
+  params.audioData = audioData;
+  params.language = language;
+  params.model = model;
+
+  Napi::Function callback = info[1].As<Napi::Function>();
+  ConfidenceWorker *worker = new ConfidenceWorker(callback, params);
+  worker->Queue();
+  return env.Undefined();
+}
+
 // ---------------
 class WhisperWorker : public Napi::ObjectWrap<WhisperWorker> {
   public:
@@ -566,6 +741,11 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
   exports.Set(
     Napi::String::New(env, "whisper"),
     Napi::Function::New(env, whisper)
+  );
+
+  exports.Set(
+    Napi::String::New(env, "whisperWithConfidence"),
+    Napi::Function::New(env, whisperWithConfidence)
   );
 
   // WhisperWorker::Init(env, exports);

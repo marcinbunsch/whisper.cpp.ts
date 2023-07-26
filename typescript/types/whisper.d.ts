@@ -11,7 +11,15 @@ declare module "whisper-ts" {
     to: number;
   };
 
+  type TranscribeWithConfidenceResult = {
+    token: string;
+    confidence: number;
+  };
+
   function transcribe(options?: TranscribeOptions): Promise<TranscribeResult[]>;
+  function transcribeWithConfidence(
+    options?: TranscribeOptions
+  ): Promise<TranscribeWithConfidenceResult[]>;
 
   class Whisper {
     constructor(modelPath: string);

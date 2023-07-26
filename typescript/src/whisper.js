@@ -69,7 +69,6 @@ async function transcribeWithConfidence(options = whisperParams) {
   params.audioData = options.audioData;
 
   const results = await whisperWithConfidenceAsync(params);
-  console.log(results);
   const output = [];
   for (const result of results) {
     const token = result[0];

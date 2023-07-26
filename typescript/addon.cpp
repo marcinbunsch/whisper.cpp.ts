@@ -233,8 +233,6 @@ int run_with_confidence(whisper_params &params, std::vector<std::vector<std::str
   // }
   const int n_segments = whisper_full_n_segments(ctx);
 
-  printf("n_segments: %d\n", n_segments);
-
   int n_tokens = 0;
   for (int i = 0; i < n_segments; i++) {
     n_tokens += whisper_full_n_tokens(ctx, i);
@@ -243,17 +241,13 @@ int run_with_confidence(whisper_params &params, std::vector<std::vector<std::str
 
   for (int i = 0; i < n_segments; i++) {
     int token_count = whisper_full_n_tokens(ctx, i);
-    printf("token_count: %d\n", token_count);
     for (int j = 0; j < token_count; ++j) {
       const char * text = whisper_full_get_token_text(ctx, i, j);
       const float  p    = whisper_full_get_token_p   (ctx, i, j);
 
-      printf("text: %s - confidence %f\n", text, p);
-
       // this needs to be a 3 element array
       result[j].emplace_back(text);
       result[j].emplace_back(std::to_string(p));
-      result[j].emplace_back("");
     }
   }
 
@@ -434,8 +428,8 @@ public:
     Napi::Object res = Napi::Array::New(Env(), result.size());
     for (uint64_t i = 0; i < result.size(); ++i)
     {
-      Napi::Object tmp = Napi::Array::New(Env(), 3);
-      for (uint64_t j = 0; j < 3; ++j)
+      Napi::Object tmp = Napi::Array::New(Env(), 2);
+      for (uint64_t j = 0; j < 2; ++j)
       {
         tmp[j] = Napi::String::New(Env(), result[i][j]);
       }

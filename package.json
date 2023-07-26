@@ -9,6 +9,7 @@
     "build": "cmake-js compile -T whisper-ts -B Release",
     "download-base-en": "./models/download-ggml-model.sh base.en",
     "download-small-en": "./models/download-ggml-model.sh small.en",
+    "download-medium-en": "./models/download-ggml-model.sh medium.en",
     "test": "jest"
   },
   "devDependencies": {

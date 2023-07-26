@@ -3,6 +3,7 @@ declare module "whisper-ts" {
     audioData?: Float32Array;
     language?: string;
     model?: string;
+    prompt?: string;
   };
 
   type TranscribeResult = {

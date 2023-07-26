@@ -593,6 +593,11 @@ Napi::Value whisper(const Napi::CallbackInfo &info)
   params.language = language;
   params.model = model;
 
+  if (whisper_params.Has("prompt")) {
+    std::string prompt = whisper_params.Get("prompt").As<Napi::String>();
+    params.prompt = prompt;
+  }
+
   Napi::Function callback = info[1].As<Napi::Function>();
   Worker *worker = new Worker(callback, params);
   worker->Queue();
@@ -627,6 +632,11 @@ Napi::Value whisperWithConfidence(const Napi::CallbackInfo &info)
   params.audioData = audioData;
   params.language = language;
   params.model = model;
+
+  if (whisper_params.Has("prompt")) {
+    std::string prompt = whisper_params.Get("prompt").As<Napi::String>();
+    params.prompt = prompt;
+  }
 
   Napi::Function callback = info[1].As<Napi::Function>();
   ConfidenceWorker *worker = new ConfidenceWorker(callback, params);

@@ -239,15 +239,16 @@ int run_with_confidence(whisper_params &params, std::vector<std::vector<std::str
   }
   result.resize(n_tokens);
 
+  int index = 0;
   for (int i = 0; i < n_segments; i++) {
     int token_count = whisper_full_n_tokens(ctx, i);
     for (int j = 0; j < token_count; ++j) {
       const char * text = whisper_full_get_token_text(ctx, i, j);
       const float  p    = whisper_full_get_token_p   (ctx, i, j);
 
-      // this needs to be a 3 element array
-      result[j].emplace_back(text);
-      result[j].emplace_back(std::to_string(p));
+      result[index].emplace_back(text);
+      result[index].emplace_back(std::to_string(p));
+      index++;
     }
   }
 

@@ -15,7 +15,7 @@ function loadAudio(audioPath: string) {
 }
 
 async function run() {
-  const filename = "jfk.wav";
+  const filename = "sample.wav";
   const { audioData } = loadAudio(filename);
 
   const start = Date.now();

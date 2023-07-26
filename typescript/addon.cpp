@@ -235,10 +235,15 @@ int run_with_confidence(whisper_params &params, std::vector<std::vector<std::str
 
   printf("n_segments: %d\n", n_segments);
 
+  int n_tokens = 0;
+  for (int i = 0; i < n_segments; i++) {
+    n_tokens += whisper_full_n_tokens(ctx, i);
+  }
+  result.resize(n_tokens);
+
   for (int i = 0; i < n_segments; i++) {
     int token_count = whisper_full_n_tokens(ctx, i);
     printf("token_count: %d\n", token_count);
-    result.resize(result.size() + token_count);
     for (int j = 0; j < token_count; ++j) {
       const char * text = whisper_full_get_token_text(ctx, i, j);
       const float  p    = whisper_full_get_token_p   (ctx, i, j);

@@ -72,7 +72,7 @@ async function transcribeWithConfidence(options = whisperParams) {
   console.log(results);
   const output = [];
   for (const result of results) {
-    const token = result[0].trim();
+    const token = result[0];
     // these are some special tokens that we don't want to return
     if (token === "[_BEG_]") continue;
     if (token.match(/\[_TT_/)) continue;
